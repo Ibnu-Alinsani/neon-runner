@@ -36,6 +36,19 @@ export const CONSTANTS = {
         COLOR: '#ff007f'
     },
 
+    // Visual FX Settings
+    PARTICLES: {
+        MAX_COUNT: 200,
+        DEFAULT_LIFE: 0.8,
+        DEFAULT_SIZE: 3,
+        SPEED_RANGE: 150
+    },
+
+    CAMERA: {
+        DEFAULT_SHAKE_INTENSITY: 5,
+        DEFAULT_SHAKE_DURATION: 0.3
+    },
+
     // Colors (Neon Palette)
     COLORS: {
         NEON_BLUE: '#00f3ff',

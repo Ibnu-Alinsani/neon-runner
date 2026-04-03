@@ -6,6 +6,8 @@ import { Player } from '../entities/Player';
 import { Obstacle } from '../entities/Obstacle';
 import { StarLayer } from '../rendering/StarLayer';
 import { BuildingLayer } from '../rendering/BuildingLayer';
+import { ParticleSystem } from '../fx/ParticleSystem';
+import { Camera } from '../fx/Camera';
 
 /**
  * Engine - The Central Authority for the game.
@@ -28,11 +30,27 @@ class Engine {
         this.obstacleTimer = 0;
         this.obstacleInterval = CONSTANTS.OBSTACLE.INITIAL_INTERVAL;
 
+        // Visual Systems
+        this.particles = new ParticleSystem(this.ctx);
+        this.camera = new Camera(this.ctx);
+
         // Background Layers
         this.backgroundLayers = [
             new StarLayer(this.ctx, 0.05, CONSTANTS.COLORS.STARS),
             new BuildingLayer(this.ctx, 0.15, CONSTANTS.COLORS.BG_GRID)
         ];
+
+        // Register Event Listeners
+        eventBus.on('PLAYER_JUMP', (pos) => {
+            this.particles.emit(pos.x, pos.y, CONSTANTS.COLORS.NEON_BLUE, 10, 0.5);
+        });
+        eventBus.on('PLAYER_LAND', (pos) => {
+            this.particles.emit(pos.x, pos.y, CONSTANTS.COLORS.NEON_BLUE, 15, 0.8);
+            this.camera.shake(5, 0.2); // Subtle landing shake
+        });
+        eventBus.on('PLAYER_TRAIL', (pos) => {
+            this.particles.emit(pos.x, pos.y, CONSTANTS.COLORS.NEON_BLUE, 1, 0.2);
+        });
 
         // UI Overlays
         this.menuOverlay = document.getElementById('menu-overlay');
@@ -92,6 +110,8 @@ class Engine {
             if (this.state === 'PLAYING') {
                 this.update(this.fixedDeltaTime);
             }
+            this.camera.update(this.fixedDeltaTime);
+            this.particles.update(this.fixedDeltaTime);
             inputHandler.postUpdate();
             this.accumulatedTime -= this.fixedDeltaTime;
         }
@@ -119,6 +139,8 @@ class Engine {
             obs.update(dt);
             
             if (this.player.collidesWith(obs)) {
+                this.camera.shake(15, 0.5); // Intense shake on crash
+                this.particles.emit(this.player.x + 20, this.player.y + 20, CONSTANTS.COLORS.NEON_RED, 30, 2);
                 this.gameOver();
             }
 
@@ -135,6 +157,8 @@ class Engine {
     draw() {
         renderer.clear();
         
+        this.camera.apply();
+
         // Draw Parallax
         this.backgroundLayers.forEach(layer => layer.draw());
 
@@ -144,7 +168,10 @@ class Engine {
         if (this.state === 'PLAYING' || this.state === 'GAMEOVER') {
             this.player.draw(this.ctx);
             this.obstacles.forEach(obs => obs.draw(this.ctx));
+            this.particles.draw();
         }
+
+        this.camera.restore();
     }
 
     drawGrid() {

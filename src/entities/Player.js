@@ -2,6 +2,7 @@ import { Entity } from './Entity';
 import { CONSTANTS } from '../utils/Constants';
 import { inputHandler, ACTIONS } from '../core/InputHandler';
 import { renderer } from '../rendering/Renderer';
+import { eventBus } from '../core/EventBus';
 
 /**
  * Player Entity - Handles Jump, Slide, and Physics
@@ -20,6 +21,9 @@ export class Player extends Entity {
         
         this.groundY = CONSTANTS.RESOLUTION.HEIGHT - HEIGHT - GROUND_MARGIN;
         this.onGround = true;
+
+        // Visuals
+        this.trailTimer = 0;
     }
 
     /**
@@ -32,6 +36,9 @@ export class Player extends Entity {
             this.velocityY = this.jumpForce;
             this.jumpCount++;
             this.onGround = false;
+
+            // Emit Jump particles
+            eventBus.emit('PLAYER_JUMP', { x: this.x + this.width / 2, y: this.y + this.height });
         }
 
         // Apply Gravity
@@ -40,10 +47,24 @@ export class Player extends Entity {
 
         // Ground Collision
         if (this.y > this.groundY) {
+            // Signal landing if we were airborne
+            if (!this.onGround) {
+                eventBus.emit('PLAYER_LAND', { x: this.x + this.width / 2, y: this.groundY + this.height });
+            }
+
             this.y = this.groundY;
             this.velocityY = 0;
             this.onGround = true;
             this.jumpCount = 0;
+        }
+
+        // Particle Trail while on ground
+        if (this.onGround) {
+            this.trailTimer += dt;
+            if (this.trailTimer > 0.05) {
+                eventBus.emit('PLAYER_TRAIL', { x: this.x, y: this.y + this.height });
+                this.trailTimer = 0;
+            }
         }
     }
 
