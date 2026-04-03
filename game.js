@@ -27,7 +27,7 @@ class GameEngine {
         this.player = null;
         this.obstacles = [];
         this.obstacleTimer = 0;
-        this.obstacleInterval = 1500; // ms between obstacles
+        this.obstacleInterval = 2000; // ms between obstacles
 
         // DOM Elements
         this.menuOverlay = document.getElementById('menu-overlay');
@@ -36,6 +36,9 @@ class GameEngine {
         this.scoreVal = document.getElementById('score-val');
         this.finalScore = document.getElementById('final-score');
 
+        // Keys
+        this.keys = {};
+        this.lastKeys = {};
         // Bind Events
         document.getElementById('start-btn').addEventListener('click', (e) => {
             e.target.blur();
@@ -97,6 +100,8 @@ class GameEngine {
         this.draw();
 
         requestAnimationFrame((t) => this.loop(t));
+
+        this.lastKeys = { ...this.keys };
     }
 
     update() {
@@ -197,6 +202,8 @@ class Player {
         this.velocityY = 0;
         this.gravity = 1500; // Pixels per second^2
         this.jumpForce = -600;
+        this.jumpCount = 0;
+        this.maxJumps = 2;
         this.onGround = true;
         this.groundY = this.game.canvas.height - this.height - 20;
 
@@ -205,12 +212,19 @@ class Player {
     }
 
     update(dt, keys) {
+        const lastKeys = this.game.lastKeys;
+
+        const isSpaceTapped = keys['Space'] && !lastKeys['Space'];
+        const isUpTapped = keys['ArrowUp'] && !lastKeys['ArrowUp']
+
+
         // Input: Jump
-        if ((keys['Space'] || keys['ArrowUp']) && this.onGround) {
+        if ((isSpaceTapped || isUpTapped) && this.jumpCount < this.maxJumps) {
             console.log("Jump");
+            console.log(this.jumpCount);
 
             this.velocityY = this.jumpForce;
-            this.onGround = false;
+            this.jumpCount++;
         }
 
         // Apply Gravity
@@ -222,6 +236,7 @@ class Player {
             this.y = this.groundY;
             this.velocityY = 0;
             this.onGround = true;
+            this.jumpCount = 0;
         }
     }
 
