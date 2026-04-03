@@ -1,0 +1,156 @@
+:root {
+    --bg-color: #0b0e14;
+    --neon-blue: #00f3ff;
+    --neon-pink: #ff007f;
+    --neon-teal: #a7ffeb;
+    --neon-red: #ff3e3e;
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: #fff;
+    font-family: 'Rajdhani', sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#game-container {
+    position: relative;
+    width: 900px;
+    height: 500px;
+    background: radial-gradient(circle at 50% 50%, #1a1f2c 0%, #0b0e14 100%);
+    border: 2px solid var(--neon-blue);
+    border-radius: 12px;
+    box-shadow: 0 0 30px rgba(0, 243, 255, 0.2);
+    overflow: hidden;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    transition: opacity 0.3s ease;
+}
+
+.overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+#hud {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: var(--glass-bg);
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(4px);
+    display: flex;
+    gap: 10px;
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 2px;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+#hud.hidden {
+    opacity: 0;
+}
+
+.neon-text {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 4rem;
+    font-weight: 700;
+    color: var(--neon-blue);
+    text-shadow: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-blue);
+    margin-bottom: 0.5rem;
+}
+
+.neon-text-red {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 3rem;
+    color: var(--neon-red);
+    text-shadow: 0 0 10px var(--neon-red);
+}
+
+.subtitle {
+    font-size: 1.2rem;
+    color: var(--neon-pink);
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    margin-bottom: 2rem;
+}
+
+.controls-hint {
+    margin-bottom: 2rem;
+    color: #888;
+    background: rgba(0,0,0,0.5);
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1px solid var(--glass-border);
+}
+
+.neon-btn {
+    background: transparent;
+    border: 2px solid var(--neon-blue);
+    color: var(--neon-blue);
+    padding: 12px 32px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-shadow: 0 0 5px var(--neon-blue);
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+}
+
+.neon-btn:hover {
+    background: var(--neon-blue);
+    color: #000;
+    box-shadow: 0 0 30px var(--neon-blue);
+}
+
+.score-container {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.score-container .label {
+    color: var(--neon-pink);
+    font-size: 0.8rem;
+}
+
+#score-val {
+    font-size: 1.5rem;
+    color: var(--neon-blue);
+    text-shadow: 0 0 8px var(--neon-blue);
+}

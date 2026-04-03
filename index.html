@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Runner</title>
+    <meta name="description" content="A side-scrolling arcade game built with native JavaScript and HTML5 Canvas.">
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts for typography -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div id="game-container">
+        <!-- Canvas where the game is rendered -->
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- UI Overlay: Start Screen -->
+        <div id="menu-overlay" class="overlay">
+            <h1 class="neon-text">NEON RUNNER</h1>
+            <p class="subtitle">Master the flow of the grid</p>
+            <div class="controls-hint">
+                <span>[SPACE] or [UP] to JUMP</span>
+            </div>
+            <button id="start-btn" class="neon-btn">START ENGINE</button>
+        </div>
+
+        <!-- UI Overlay: Game Over -->
+        <div id="gameover-overlay" class="overlay hidden">
+            <h2 class="neon-text-red">SYSTEM CRASH</h2>
+            <p id="final-score">SCORE: 0</p>
+            <button id="restart-btn" class="neon-btn">RESTART</button>
+        </div>
+
+        <!-- HUD: Heads-up Display -->
+        <div id="hud" class="hidden">
+            <div class="score-container">
+                <span class="label">DATA PKTS:</span>
+                <span id="score-val">0</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+
+</html>
