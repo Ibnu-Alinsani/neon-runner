@@ -39,6 +39,13 @@ class GameEngine {
         // Keys
         this.keys = {};
         this.lastKeys = {};
+
+        // Parallax Layers
+        this.backgroundLayers = [
+            new ParallaxLayer(this, 0.05, '#ffffff', 'stars'),
+            new ParallaxLayer(this, 0.15, 'rgba(0, 243, 255, 0.05)', 'buildings')
+        ];
+
         // Bind Events
         document.getElementById('start-btn').addEventListener('click', (e) => {
             e.target.blur();
@@ -142,6 +149,8 @@ class GameEngine {
     draw() {
         // Clear screen
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        this.backgroundLayers.forEach(layer => layer.draw());
 
         // Draw Background Grid (Esthetic)
         this.drawGrid();
@@ -289,6 +298,103 @@ class Obstacle {
         ctx.strokeRect(this.x, this.y, this.width, this.height);
 
         ctx.restore();
+    }
+}
+
+class ParallaxLayer {
+    constructor(game, speedFactor, color, type) {
+        this.game = game;
+        this.ctx = game.ctx;
+        this.speedFactor = speedFactor;
+        this.color = color;
+        this.type = type; // 'stars' or 'buildings'
+        this.elements = [];
+
+        this.setup();
+    }
+
+    setup() {
+        if (this.type === 'stars') {
+            this.setupStars();
+        } else if (this.type === 'buildings') {
+            this.setupBuildings();
+        }
+    }
+
+    setupStars() {
+        for (let i = 0; i < 100; i++) {
+            this.elements.push({
+                x: Math.random() * this.game.canvas.width,
+                y: Math.random() * this.game.canvas.height,
+                size: Math.random() * 2 + 1
+            });
+        }
+    }
+
+    setupBuildings() {
+        let currentX = 0;
+
+        while (currentX < this.game.canvas.width * 2) {
+            const w = 50 + Math.random() * 100;
+            const h = 50 + Math.random() * 200;
+
+            this.elements.push({
+                x: currentX,
+                w: w,
+                h: h,
+            });
+
+            currentX += w + 20 + Math.random() * 50;
+        }
+    }
+
+    draw() {
+        const offset = performance.now() * this.speedFactor
+        this.ctx.fillStyle = this.color;
+
+        this.elements.forEach(el => {
+            let posX = (el.x - offset) % this.game.canvas.width;
+
+            if (posX < 0) posX += this.game.canvas.width;
+
+            if (this.type === 'stars') {
+                this.ctx.beginPath();
+                this.ctx.arc(posX, el.y, el.size, 0, Math.PI * 2);
+                this.ctx.fill();
+            } else if (this.type === 'buildings') {
+                this.ctx.fillRect(posX, this.game.canvas.height - el.h - 20, el.w, el.h);
+            }
+        })
+    }
+
+    drawStars(offset) {
+        this.ctx.fillStyle = this.color;
+        const spacing = 150;
+
+        for (let x = 0; x < this.game.canvas.width + spacing; x += spacing) {
+            for (let y = 0; y < this.game.canvas.height; y += spacing) {
+                let posX = (x - (offset % spacing)) % this.game.canvas.width;
+
+                if (posX < 0) posX += this.game.canvas.width;
+
+                this.ctx.beginPath();
+                this.ctx.arc(posX, y + (x % 50), 1, 0, Math.PI * 2);
+                this.ctx.fill();
+            }
+        }
+    }
+
+    drawBuildings(offset) {
+        this.ctx.fillStyle = this.color;
+        const width = 100;
+        const spacing = 50;
+        const total = width + spacing;
+
+        for (let x = 0; x < this.game.canvas.width + total; x += total) {
+            let posX = (x - (offset % total));
+            let height = 150 + (x % 100);
+            this.ctx.fillRect(posX, this.game.canvas.height - height - 20, width, height);
+        }
     }
 }
 
