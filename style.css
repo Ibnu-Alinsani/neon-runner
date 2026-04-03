@@ -24,11 +24,15 @@ body {
     font-family: 'Rajdhani', sans-serif;
     overflow: hidden;
     width: 100vw;
-    height: 100vh;
+    height: 100vh; /* Fallback for older browsers */
+    height: 100dvh; /* Dynamic Viewport Height (iOS/Android) */
     display: flex;
     justify-content: center;
     align-items: center;
     touch-action: none; /* Block browser pull-to-refresh/zoom */
+    position: fixed; /* Lock entire viewport */
+    top: 0;
+    left: 0;
 }
 
 #game-container {
@@ -230,7 +234,7 @@ canvas {
 @media (max-width: 900px) {
     #game-container {
         width: 100vw;
-        height: 100vh;
+        height: 100dvh;
         border-radius: 0;
         border: none;
         box-shadow: none;
