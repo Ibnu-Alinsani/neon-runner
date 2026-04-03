@@ -8,26 +8,33 @@ class Renderer {
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
         
-        // Logical resolution
-        this.width = CONSTANTS.RESOLUTION.WIDTH;
-        this.height = CONSTANTS.RESOLUTION.HEIGHT;
-        
-        this.canvas.width = this.width;
-        this.canvas.height = this.height;
+        // Logical resolution (default, will be updated by resize)
+        this.width = 900;
+        this.height = 500;
 
-        // Auto-scaling logic (Maintain Aspect Ratio)
         window.addEventListener('resize', () => this.resize());
         this.resize();
     }
 
     resize() {
-        const container = this.canvas.parentElement;
-        const width = container.clientWidth;
-        const height = container.clientHeight;
-        const scale = Math.min(width / this.width, height / this.height);
+        const dpr = window.devicePixelRatio || 1;
+        const width = window.innerWidth;
+        const height = window.innerHeight;
 
-        this.canvas.style.width = `${this.width * scale}px`;
-        this.canvas.style.height = `${this.height * scale}px`;
+        // 1. SET PHYSICAL DIMENSIONS (High-DPI)
+        this.canvas.width = width * dpr;
+        this.canvas.height = height * dpr;
+        this.canvas.style.width = `${width}px`;
+        this.canvas.style.height = `${height}px`;
+
+        // 2. SET LOGICAL DIMENSIONS
+        // Fixed Height (500) | Fluid Width (Depends on Ratio)
+        this.height = 500;
+        this.width = (width / height) * 500;
+
+        // 3. SCALE THE CONTEXT
+        const scale = (height * dpr) / 500;
+        this.ctx.scale(scale, scale);
     }
 
     clear() {

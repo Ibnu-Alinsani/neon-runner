@@ -1,4 +1,4 @@
-import { CONSTANTS } from '../utils/Constants';
+import { renderer } from './Renderer';
 
 /**
  * Base ParallaxLayer - Handles general movement and looping logic
@@ -8,9 +8,11 @@ export class ParallaxLayer {
         this.ctx = ctx;
         this.speedFactor = speedFactor;
         this.color = color;
-        this.width = CONSTANTS.RESOLUTION.WIDTH;
-        this.height = CONSTANTS.RESOLUTION.HEIGHT;
         this.elements = [];
+
+        // Wide-field initial bounds (Covering any potential screen)
+        this.worldWidth = 2000;
+        this.worldHeight = 500;
 
         // Setup individual elements (to be overridden by subclasses)
         this.setup();
@@ -27,15 +29,16 @@ export class ParallaxLayer {
      * Render the layer with parallax movement
      */
     draw() {
+        const { width } = renderer;
         const offset = performance.now() * this.speedFactor;
         
         this.ctx.save();
         this.ctx.fillStyle = this.color;
         
         this.elements.forEach(el => {
-            // Logika bungkus (wrap-around)
-            let posX = (el.x - offset) % this.width;
-            if (posX < 0) posX += this.width;
+            // Dynamic wrap-around based on current screen width
+            let posX = (el.x - offset) % width;
+            if (posX < 0) posX += width;
             
             this.drawElement(this.ctx, posX, el);
         });

@@ -12,10 +12,10 @@ export class StarLayer extends ParallaxLayer {
      * Generate 100 random stars
      */
     setup() {
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < 150; i++) { // Increased count for wider coverage
             this.elements.push({
-                x: Math.random() * this.width,
-                y: Math.random() * this.height,
+                x: Math.random() * this.worldWidth,
+                y: Math.random() * this.worldHeight,
                 size: Math.random() * 2 + 1
             });
         }

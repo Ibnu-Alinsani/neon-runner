@@ -13,7 +13,7 @@ export class BuildingLayer extends ParallaxLayer {
      */
     setup() {
         let currentX = 0;
-        while (currentX < this.width * 2) {
+        while (currentX < this.worldWidth) { // Fill the wide field
             const w = 50 + Math.random() * 100;
             const h = 50 + Math.random() * 200;
             this.elements.push({ x: currentX, w, h });
@@ -28,6 +28,6 @@ export class BuildingLayer extends ParallaxLayer {
      * @param {object} el 
      */
     drawElement(ctx, posX, el) {
-        ctx.fillRect(posX, this.height - el.h - 20, el.w, el.h);
+        ctx.fillRect(posX, this.worldHeight - el.h - 20, el.w, el.h);
     }
 }

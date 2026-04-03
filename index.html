@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Neon Runner | Professional Native JS Engine</title>
     <meta name="description" content="A professional-grade side-scrolling arcade game built with native JavaScript and Vite.">
     <!-- Google Fonts for typography -->
@@ -29,6 +29,13 @@
             <h2 class="neon-text-red">SYSTEM CRASH</h2>
             <p id="final-score">SCORE: 0</p>
             <button id="restart-btn" class="neon-btn">REBOOT</button>
+        </div>
+
+        <!-- System Orientation Hint -->
+        <div id="orientation-hint" class="overlay">
+            <div class="rotate-icon">🔄</div>
+            <h2 class="neon-text-blue">ROTATE DEVICE</h2>
+            <p class="subtitle">LANDSCAPE MODE REQUIRED FOR HYPER-DRIVE</p>
         </div>
 
         <div id="hud" class="hidden">

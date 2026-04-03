@@ -15,6 +15,7 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -22,10 +23,12 @@ body {
     color: #fff;
     font-family: 'Rajdhani', sans-serif;
     overflow: hidden;
+    width: 100vw;
     height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
+    touch-action: none; /* Block browser pull-to-refresh/zoom */
 }
 
 #game-container {
@@ -63,8 +66,31 @@ canvas {
 }
 
 .overlay.hidden {
-    opacity: 0;
-    pointer-events: none;
+    display: none;
+}
+
+#orientation-hint {
+    display: none; /* Standard hide */
+    background: #000 !important;
+    z-index: 9999;
+}
+
+.rotate-icon {
+    font-size: 5rem;
+    margin-bottom: 20px;
+    animation: rotate 2s infinite linear;
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Orientation Control */
+@media (orientation: portrait) {
+    #orientation-hint {
+        display: flex;
+    }
 }
 
 #hud {
@@ -198,4 +224,66 @@ canvas {
     text-shadow: 0 0 8px var(--current-theme);
     transition: color 0.5s ease;
     font-family: 'Orbitron', sans-serif;
+}
+
+/* --- MOBILE MASTER OPTIMIZATION --- */
+@media (max-width: 900px) {
+    #game-container {
+        width: 100vw;
+        height: 100vh;
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+    }
+
+    .neon-text {
+        font-size: 2.5rem;
+    }
+
+    .neon-text-blue, .neon-text-red {
+        font-size: 2rem;
+    }
+
+    .subtitle {
+        font-size: 0.9rem;
+        letter-spacing: 2px;
+    }
+
+    #hud {
+        top: 10px;
+        right: 15px;
+        left: 15px;
+        padding: 8px 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .score-data {
+        flex-direction: row;
+        gap: 15px;
+    }
+
+    #score-val, #best-val {
+        font-size: 1.1rem;
+    }
+
+    .icon-btn {
+        width: 44px; /* Thumb-Friendly Target */
+        height: 44px;
+        font-size: 1.3rem;
+    }
+
+    .controls-group {
+        gap: 8px;
+    }
+
+    .overlay {
+        padding: 20px;
+    }
+
+    .main-menu .neon-text {
+        font-size: 2.8rem;
+    }
 }
