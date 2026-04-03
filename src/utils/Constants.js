@@ -27,14 +27,34 @@ export const CONSTANTS = {
     OBSTACLE: {
         WIDTH: 30,
         MIN_HEIGHT: 30,
-        MAX_HEIGHT: 90,
-        START_SPEED: 350,
-        SPEED_INCREMENT: 0.1,
+        MAX_HEIGHT: 120,
+        TYPES: {
+            GROUND: 'GROUND',
+            FLYING: 'FLYING',
+            HIGH: 'HIGH'
+        },
+        START_SPEED: 250,
+        SPEED_EXPONENT: 0.45, // Smoother growth
+        SPEED_MULT: 15,
+        MAX_SPEED: 1000,
         INITIAL_INTERVAL: 2000,
-        MIN_INTERVAL: 600,
-        INTERVAL_DECREMENT: 10,
+        MIN_INTERVAL: 400,
         COLOR: '#ff007f'
     },
+
+    // Gameplay Logic
+    GAMEPLAY: {
+        NEAR_MISS_THRESHOLD: 15, // Pixels
+        NEAR_MISS_BONUS: 25,
+        SLIDE_HEIGHT_FACTOR: 0.5 // Hitbox shrinks to 50% height
+    },
+
+    // Level Progression (Score based)
+    LEVELS: [
+        { score: 0, color: '#00f3ff', label: 'CYBER' },
+        { score: 1000, color: '#ff00ff', label: 'NEURAL' },
+        { score: 3000, color: '#00ff7f', label: 'VOID' }
+    ],
 
     // Visual FX Settings
     PARTICLES: {

@@ -32,9 +32,11 @@ export class ParticleSystem {
      * @param {string} color - Hex/RGB color
      * @param {number} count - Number of particles to spawn
      * @param {number} speedMult - Speed multiplier (for variations)
+     * @param {number} gameSpeed - Current game momentum
      */
-    emit(x, y, color, count = 10, speedMult = 1.0) {
+    emit(x, y, color, count = 10, speedMult = 1.0, gameSpeed = 0) {
         let spawned = 0;
+        const speedFactor = gameSpeed / 250; // Reference to start speed
         const range = CONSTANTS.PARTICLES.SPEED_RANGE * speedMult;
 
         for (let i = 0; i < this.maxParticles && spawned < count; i++) {
@@ -43,11 +45,16 @@ export class ParticleSystem {
                 p.active = true;
                 p.x = x;
                 p.y = y;
-                // Random outward velocity
-                p.vx = (Math.random() - 0.5) * range;
+                
+                // PHYSICS: Outward burst + Heavy wind drag based on gameSpeed
+                // vx is biased heavily to the left as gameSpeed increases
+                p.vx = ((Math.random() - 0.5) * range) - (gameSpeed * 0.8 * Math.random());
                 p.vy = (Math.random() - 0.5) * range;
-                p.life = CONSTANTS.PARTICLES.DEFAULT_LIFE * (0.5 + Math.random() * 0.5);
+                
+                // LIFESPAN: Shorter lifespan at high speeds for "whipped away" look
+                p.life = (CONSTANTS.PARTICLES.DEFAULT_LIFE / speedFactor) * (0.5 + Math.random() * 0.5);
                 p.maxLife = p.life;
+                
                 p.color = color;
                 p.size = CONSTANTS.PARTICLES.DEFAULT_SIZE * (0.5 + Math.random() * 0.5);
                 spawned++;
