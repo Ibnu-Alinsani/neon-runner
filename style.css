@@ -90,9 +90,9 @@ canvas {
     pointer-events: none;
 }
 
-.score-data {
+.controls-group {
     display: flex;
-    gap: 15px;
+    gap: 12px;
 }
 
 .icon-btn {
@@ -125,6 +125,13 @@ canvas {
     text-shadow: 0 0 10px var(--current-theme), 0 0 20px var(--current-theme);
     margin-bottom: 0.5rem;
     transition: color 0.5s ease, text-shadow 0.5s ease;
+}
+
+.neon-text-blue {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 3rem;
+    color: var(--neon-blue);
+    text-shadow: 0 0 10px var(--neon-blue);
 }
 
 .neon-text-red {

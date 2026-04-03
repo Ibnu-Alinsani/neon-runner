@@ -42,10 +42,25 @@
                     <span id="best-val">0</span>
                 </div>
             </div>
-            <!-- Audio Controller -->
-            <button id="mute-btn" class="icon-btn" title="Mute/Unmute">
-                <span id="mute-icon">🔊</span>
-            </button>
+            <!-- Game Controllers -->
+            <div class="controls-group">
+                <button id="pause-btn" class="icon-btn" title="Pause/Resume (ESC)">
+                    <span id="pause-icon">⏸</span>
+                </button>
+                <button id="mute-btn" class="icon-btn" title="Mute/Unmute">
+                    <span id="mute-icon">🔊</span>
+                </button>
+                <button id="home-btn" class="icon-btn" title="Quit to Menu">
+                    <span id="home-icon">🏠</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- System Idle Overlay (Pause) -->
+        <div id="pause-overlay" class="overlay hidden">
+            <h2 class="neon-text-blue">SYSTEM IDLE</h2>
+            <p class="subtitle">PAUSED | [ESC] to RESUME</p>
+            <button id="resume-btn" class="neon-btn">RESUME CORE</button>
         </div>
     </div>
 

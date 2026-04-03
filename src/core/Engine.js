@@ -86,6 +86,10 @@ class Engine {
         this.scoreVal = document.getElementById('score-val');
         this.bestVal = document.getElementById('best-val');
         this.finalScore = document.getElementById('final-score');
+        
+        // NEW Master Control Overlays
+        this.pauseOverlay = document.getElementById('pause-overlay');
+        this.pauseIcon = document.getElementById('pause-icon');
 
         this.init();
     }
@@ -93,6 +97,9 @@ class Engine {
     init() {
         const startBtn = document.getElementById('start-btn');
         const restartBtn = document.getElementById('restart-btn');
+        const resumeBtn = document.getElementById('resume-btn');
+        const pauseBtn = document.getElementById('pause-btn');
+        const homeBtn = document.getElementById('home-btn');
         const muteBtn = document.getElementById('mute-btn');
         const muteIcon = document.getElementById('mute-icon');
 
@@ -115,12 +122,33 @@ class Engine {
             }
         };
 
+        const onPause = (e) => {
+            e.preventDefault();
+            e.target.blur();
+            this.togglePause();
+        };
+
+        const onHome = (e) => {
+            e.preventDefault();
+            e.target.blur();
+            this.quitToMenu();
+        };
+
         // Click & Touch Support for all UI
         startBtn.addEventListener('click', onStart);
         startBtn.addEventListener('touchstart', onStart, { passive: false });
         
         restartBtn.addEventListener('click', onStart);
         restartBtn.addEventListener('touchstart', onStart, { passive: false });
+
+        resumeBtn.addEventListener('click', onPause);
+        resumeBtn.addEventListener('touchstart', onPause, { passive: false });
+
+        pauseBtn.addEventListener('click', onPause);
+        pauseBtn.addEventListener('touchstart', onPause, { passive: false });
+
+        homeBtn.addEventListener('click', onHome);
+        homeBtn.addEventListener('touchstart', onHome, { passive: false });
 
         muteBtn.addEventListener('click', onMute);
         muteBtn.addEventListener('touchstart', onMute, { passive: false });
@@ -172,7 +200,28 @@ class Engine {
         this.accumulatedTime += Math.min(frameTime, 0.25);
 
         while (this.accumulatedTime >= this.fixedDeltaTime) {
-            if (this.state === 'PLAYING') {
+            // --- CONTEXTUAL KEYBOARD NAVIGATION ---
+            const isJumpPressed = inputHandler.isActionJustPressed('JUMP');
+            let transitioned = false;
+            
+            if (this.state === 'MENU' && isJumpPressed) {
+                this.start();
+                transitioned = true;
+            } else if (this.state === 'PAUSED' && isJumpPressed) {
+                this.togglePause();
+                transitioned = true;
+            } else if (this.state === 'GAMEOVER' && isJumpPressed) {
+                this.start();
+                transitioned = true;
+            }
+
+            // Check for Pause Key Toggle
+            if (inputHandler.isActionJustPressed('PAUSE')) {
+                this.togglePause();
+                transitioned = true;
+            }
+
+            if (this.state === 'PLAYING' && !transitioned) {
                 this.update(this.fixedDeltaTime);
             }
             this.camera.update(this.fixedDeltaTime);
@@ -254,6 +303,29 @@ class Engine {
         return Math.sqrt(dx*dx + dy*dy);
     }
 
+    togglePause() {
+        if (this.state === 'PLAYING') {
+            this.state = 'PAUSED';
+            this.pauseOverlay.classList.remove('hidden');
+            this.pauseIcon.textContent = '▶';
+            audioManager.pauseAudio();
+        } else if (this.state === 'PAUSED') {
+            this.state = 'PLAYING';
+            this.pauseOverlay.classList.add('hidden');
+            this.pauseIcon.textContent = '⏸';
+            audioManager.resumeAudio();
+        }
+    }
+
+    quitToMenu() {
+        this.state = 'MENU';
+        this.menuOverlay.classList.remove('hidden');
+        this.gameoverOverlay.classList.add('hidden');
+        this.pauseOverlay.classList.add('hidden');
+        this.hud.classList.add('hidden');
+        audioManager.stopAllSounds();
+    }
+
     updateProgression(dt) {
         const { START_SPEED, MAX_SPEED } = CONSTANTS.OBSTACLE;
         
@@ -308,12 +380,10 @@ class Engine {
         renderer.clear();
         
         // --- KINETIC FOV STRETCH ---
-        // Dynamically stretch coordinates horizontally based on speed
-        const stretchFactor = 1 + Math.max(0, (this.gameSpeed - 400) * 0.0001);
+        const stretchFactor = this.state === 'PLAYING' ? (1 + Math.max(0, (this.gameSpeed - 400) * 0.0001)) : 1;
         const { ctx, width, height } = renderer;
         
         ctx.save();
-        // Scale around the center of the screen
         ctx.translate(width / 2, height / 2);
         ctx.scale(stretchFactor, 1);
         ctx.translate(-width / 2, -height / 2);
@@ -322,10 +392,11 @@ class Engine {
         this.backgroundLayers.forEach(layer => layer.draw());
         this.drawGrid();
 
-        if (this.state === 'PLAYING' || this.state === 'GAMEOVER') {
-            this.player.draw(this.ctx);
+        if (this.state === 'PLAYING' || this.state === 'PAUSED' || this.state === 'GAMEOVER') {
+            if (this.player) this.player.draw(this.ctx);
             this.obstacles.forEach(obs => obs.draw(this.ctx));
-            this.particles.draw(this.gameSpeed);
+            const pSpeed = this.state === 'PLAYING' ? this.gameSpeed : 0;
+            this.particles.draw(pSpeed);
         }
 
         if (this.gameSpeed > 700) {

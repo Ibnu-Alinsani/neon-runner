@@ -23,6 +23,7 @@ class InputHandler {
             'ArrowDown': ACTIONS.SLIDE,
             'KeyS': ACTIONS.SLIDE,
             'Escape': ACTIONS.PAUSE,
+            'KeyP': ACTIONS.PAUSE,
             'KeyR': ACTIONS.RESTART
         };
 

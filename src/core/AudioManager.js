@@ -115,6 +115,20 @@ class AudioManager {
         });
     }
 
+    async pauseAudio() {
+        if (this.ctx && this.ctx.state === 'running') {
+            await this.ctx.suspend();
+            console.log('[Audio] Context Suspended');
+        }
+    }
+
+    async resumeAudio() {
+        if (this.ctx && this.ctx.state === 'suspended') {
+            await this.ctx.resume();
+            console.log('[Audio] Context Resumed');
+        }
+    }
+
     async playBGM() {
         if (!this.isInitialized || !this.bgmBuffer) return;
         
