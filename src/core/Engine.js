@@ -9,6 +9,7 @@ import { BuildingLayer } from '../rendering/BuildingLayer';
 import { ParticleSystem } from '../fx/ParticleSystem';
 import { Camera } from '../fx/Camera';
 import { lerpColor, hexToRgba } from '../utils/Math';
+import { audioManager } from './AudioManager';
 
 /**
  * Engine - The Central Authority for the game.
@@ -19,6 +20,9 @@ class Engine {
         this.ctx = renderer.ctx;
         this.state = 'MENU';
         this.score = 0;
+        
+        // Persistence
+        this.highScore = parseInt(localStorage.getItem(CONSTANTS.GAMEPLAY.STORAGE_KEY)) || 0;
         
         // Dynamic Difficulty
         this.gameSpeed = CONSTANTS.OBSTACLE.START_SPEED;
@@ -80,6 +84,7 @@ class Engine {
         this.gameoverOverlay = document.getElementById('gameover-overlay');
         this.hud = document.getElementById('hud');
         this.scoreVal = document.getElementById('score-val');
+        this.bestVal = document.getElementById('best-val');
         this.finalScore = document.getElementById('final-score');
 
         this.init();
@@ -95,6 +100,9 @@ class Engine {
             this.start();
         });
 
+        // Initial high score display
+        if (this.bestVal) this.bestVal.textContent = Math.floor(this.highScore);
+
         requestAnimationFrame((t) => this.loop(t));
     }
 
@@ -108,16 +116,29 @@ class Engine {
         this.obstacleInterval = CONSTANTS.OBSTACLE.INITIAL_INTERVAL;
         this.player = new Player();
         
+        // Update High Score Display
+        if (this.bestVal) this.bestVal.textContent = Math.floor(this.highScore);
+
         this.menuOverlay.classList.add('hidden');
         this.gameoverOverlay.classList.add('hidden');
         this.hud.classList.remove('hidden');
+
+        eventBus.emit('GAME_START');
     }
 
     gameOver() {
         this.state = 'GAMEOVER';
+        this.saveHighScore();
         this.gameoverOverlay.classList.remove('hidden');
         this.finalScore.textContent = `SCORE: ${Math.floor(this.score)}`;
         this.hud.classList.add('hidden');
+    }
+
+    saveHighScore() {
+        if (this.score > this.highScore) {
+            this.highScore = this.score;
+            localStorage.setItem(CONSTANTS.GAMEPLAY.STORAGE_KEY, Math.floor(this.highScore));
+        }
     }
 
     loop(currentTime) {
@@ -163,6 +184,7 @@ class Engine {
             if (this.player.collidesWith(obs)) {
                 this.camera.shake(15, 0.5); 
                 this.particles.emit(this.player.x + 20, this.player.y + 20, CONSTANTS.COLORS.NEON_RED, 30, 2, this.gameSpeed);
+                eventBus.emit('COLLISION');
                 this.gameOver();
             }
 
@@ -184,6 +206,13 @@ class Engine {
         this.updateProgression(dt);
         this.score += dt * (5 * this.speedFactor);
         this.scoreVal.textContent = Math.floor(this.score);
+
+        // Real-time High Score Update
+        if (this.score > this.highScore) {
+            this.highScore = this.score;
+            if (this.bestVal) this.bestVal.textContent = Math.floor(this.highScore);
+            eventBus.emit('NEW_RECORD');
+        }
     }
 
     handleNearMiss(obs) {
@@ -191,6 +220,7 @@ class Engine {
         this.score += CONSTANTS.GAMEPLAY.NEAR_MISS_BONUS;
         this.camera.shake(3, 0.1);
         this.particles.emit(this.player.x + this.player.width, this.player.y, '#fff', 5, 0.3, this.gameSpeed);
+        eventBus.emit('NEAR_MISS');
     }
 
     getDistance(p, o) {
@@ -200,20 +230,39 @@ class Engine {
     }
 
     updateProgression(dt) {
-        // Dynamic Power-Curve Speed
-        const { START_SPEED, SPEED_EXPONENT, SPEED_MULT, MAX_SPEED } = CONSTANTS.OBSTACLE;
-        const targetSpeed = Math.min(MAX_SPEED, START_SPEED + Math.pow(this.score, SPEED_EXPONENT) * SPEED_MULT);
+        const { START_SPEED, MAX_SPEED } = CONSTANTS.OBSTACLE;
         
-        // Smoothly lerp gameSpeed for continuous acceleration
-        this.gameSpeed = this.gameSpeed + (targetSpeed - this.gameSpeed) * 0.1;
-        this.speedFactor = this.gameSpeed / START_SPEED;
-
-        // Level Color Update
+        // Find the current level based on score
         const nextLevel = [...CONSTANTS.LEVELS].reverse().find(lvl => this.score >= lvl.score);
+        
         if (nextLevel && nextLevel !== this.currentLevel) {
             this.currentLevel = nextLevel;
+            // Visual feedback for level jump (Cinematic "Gear Shift")
+            this.camera.shake(10, 0.4);
+            // Flash effect could be implemented via a temporary overlay if needed
         }
+
+        // Target Speed is now fixed per level (The "Velvet Stage" logic)
+        const targetSpeed = Math.min(MAX_SPEED, this.currentLevel.targetSpeed);
         
+        // Smoothly glide into the target speed (interpolated for kehalusan)
+        this.gameSpeed = this.gameSpeed + (targetSpeed - this.gameSpeed) * 0.01;
+        this.speedFactor = this.gameSpeed / START_SPEED;
+
+        // Continuous Arrangement Factor for smooth musical evolution
+        let arrangementFactor = 0;
+        if (this.score < 700) {
+            arrangementFactor = this.score / 700;
+        } else if (this.score < 2100) {
+            arrangementFactor = 1 + (this.score - 700) / 1400;
+        } else {
+            arrangementFactor = 2.0;
+        }
+
+        // Sync Audio Tempo & Evolution Intensity
+        audioManager.setSpeed(this.speedFactor, arrangementFactor);
+        
+        // Smooth Color/UI Transition
         if (this.themeColor !== this.currentLevel.color) {
             this.themeColor = lerpColor(this.themeColor, this.currentLevel.color, 0.02);
             this.player.color = this.themeColor;
@@ -226,7 +275,6 @@ class Engine {
         const [interval, type, height] = this.patterns[this.patternIndex];
         this.obstacles.push(new Obstacle(renderer.width, height, type));
         
-        // Pattern intervals now scale with speed
         this.obstacleInterval = interval / (this.speedFactor * 0.8);
         this.patternIndex = (this.patternIndex + 1) % this.patterns.length;
     }
@@ -234,8 +282,6 @@ class Engine {
     draw() {
         renderer.clear();
         this.camera.apply();
-
-        // Draw Layers
         this.backgroundLayers.forEach(layer => layer.draw());
         this.drawGrid();
 
@@ -245,33 +291,25 @@ class Engine {
             this.particles.draw();
         }
 
-        // Draw High Speed Visual Feedback (Performant Streaks)
         if (this.gameSpeed > 700) {
             this.drawSpeedStreaks();
         }
-
         this.camera.restore();
     }
 
     drawSpeedStreaks() {
         const { ctx, width, height } = renderer;
         const intensity = Math.min(1, (this.gameSpeed - 700) / 300);
-        
         ctx.save();
         ctx.strokeStyle = '#fff';
         ctx.globalAlpha = intensity * 0.4;
         ctx.lineWidth = 1;
-        
-        // Random lines to simulate wind/speed
         const lineCount = Math.floor(intensity * 15);
         for (let i = 0; i < lineCount; i++) {
             const x = Math.random() * width;
             const y = Math.random() * height;
             const len = 20 + Math.random() * 60;
-            ctx.beginPath();
-            ctx.moveTo(x, y);
-            ctx.lineTo(x + len, y);
-            ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + len, y); ctx.stroke();
         }
         ctx.restore();
     }
@@ -282,20 +320,13 @@ class Engine {
         ctx.strokeStyle = this.themeColor;
         ctx.globalAlpha = 0.1;
         ctx.lineWidth = 1;
-        
         const spacing = 40;
-        // Grid now scrolls based on gameSpeed
         const offset = (performance.now() * (this.gameSpeed / 1000)) % spacing;
-
         for (let x = -offset; x < width; x += spacing) {
-            ctx.beginPath();
-            ctx.moveTo(x, 0); ctx.lineTo(x, height);
-            ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
         }
         for (let y = 0; y < height; y += spacing) {
-            ctx.beginPath();
-            ctx.moveTo(0, y); ctx.lineTo(width, y);
-            ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
         }
         ctx.restore();
     }

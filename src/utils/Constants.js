@@ -34,9 +34,8 @@ export const CONSTANTS = {
             HIGH: 'HIGH'
         },
         START_SPEED: 250,
-        SPEED_EXPONENT: 0.45, // Smoother growth
-        SPEED_MULT: 15,
-        MAX_SPEED: 1000,
+        START_SPEED: 250,
+        MAX_SPEED: 1200,
         INITIAL_INTERVAL: 2000,
         MIN_INTERVAL: 400,
         COLOR: '#ff007f'
@@ -44,16 +43,28 @@ export const CONSTANTS = {
 
     // Gameplay Logic
     GAMEPLAY: {
-        NEAR_MISS_THRESHOLD: 15, // Pixels
+        NEAR_MISS_THRESHOLD: 40, 
         NEAR_MISS_BONUS: 25,
-        SLIDE_HEIGHT_FACTOR: 0.5 // Hitbox shrinks to 50% height
+        SLIDE_HEIGHT_FACTOR: 0.5,
+        STORAGE_KEY: 'NEON_RUNNER_HS'
+    },
+
+    AUDIO: {
+        VOLUME: 1.5,
+        SFX_SOURCES: {
+            JUMP: 'jump.mp3',
+            LAND: 'land.mp3',
+            SLIDE: 'slide.mp3',
+            NEAR_MISS: 'nearmiss.mp3',
+            CRASH: 'crash.mp3'
+        }
     },
 
     // Level Progression (Score based)
     LEVELS: [
-        { score: 0, color: '#00f3ff', label: 'CYBER' },
-        { score: 1000, color: '#ff00ff', label: 'NEURAL' },
-        { score: 3000, color: '#00ff7f', label: 'VOID' }
+        { score: 0, color: '#00f3ff', targetSpeed: 300, label: 'CYBER' },
+        { score: 700, color: '#ff00ff', targetSpeed: 450, label: 'NEURAL' },
+        { score: 2100, color: '#00ff7f', targetSpeed: 600, label: 'VOID' }
     ],
 
     // Visual FX Settings

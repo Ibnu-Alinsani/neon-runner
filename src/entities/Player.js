@@ -41,9 +41,11 @@ export class Player extends Entity {
         // 1. Input: Slide
         const slideIntent = inputHandler.isActionActive(ACTIONS.SLIDE);
         if (slideIntent && this.onGround) {
+            if (!this.isSliding) eventBus.emit('PLAYER_SLIDE_START');
             this.targetHeight = this.slideHeight;
             this.isSliding = true;
-        } else if (!slideIntent && !isBlockedFromStanding) {
+        } else if (this.isSliding && (!slideIntent || !isBlockedFromStanding)) {
+            eventBus.emit('PLAYER_SLIDE_END');
             this.targetHeight = this.originalHeight;
             this.isSliding = false;
         }
