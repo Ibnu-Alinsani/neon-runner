@@ -18,6 +18,8 @@ class InputHandler {
             'Space': ACTIONS.JUMP,
             'ArrowUp': ACTIONS.JUMP,
             'KeyW': ACTIONS.JUMP,
+            'Touch': ACTIONS.JUMP, // Virtual key for touch
+            'Mouse': ACTIONS.JUMP, // Virtual key for mouse
             'ArrowDown': ACTIONS.SLIDE,
             'KeyS': ACTIONS.SLIDE,
             'Escape': ACTIONS.PAUSE,
@@ -26,6 +28,30 @@ class InputHandler {
 
         window.addEventListener('keydown', (e) => this.onKeyDown(e));
         window.addEventListener('keyup', (e) => this.onKeyUp(e));
+        
+        // Mobile Touch Support (Jump on Tap)
+        window.addEventListener('touchstart', (e) => {
+            // Prevent scrolling/zooming during play
+            if (e.target.tagName !== 'BUTTON' && !e.target.closest('button')) {
+                e.preventDefault();
+                this.keys['Touch'] = true;
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchend', (e) => {
+            this.keys['Touch'] = false;
+        });
+
+        // Mouse Click Support (Jump on Click)
+        window.addEventListener('mousedown', (e) => {
+            // Only trigger if left click and not on a button
+            if (e.button === 0 && e.target.tagName !== 'BUTTON' && !e.target.closest('button')) {
+                this.keys['Mouse'] = true;
+            }
+        });
+        window.addEventListener('mouseup', () => {
+            this.keys['Mouse'] = false;
+        });
     }
 
     onKeyDown(e) {

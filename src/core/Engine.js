@@ -91,14 +91,39 @@ class Engine {
     }
 
     init() {
-        document.getElementById('start-btn').addEventListener('click', (e) => {
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const muteBtn = document.getElementById('mute-btn');
+        const muteIcon = document.getElementById('mute-icon');
+
+        const onStart = (e) => {
+            e.preventDefault();
             e.target.blur();
             this.start();
-        });
-        document.getElementById('restart-btn').addEventListener('click', (e) => {
+        };
+
+        const onMute = (e) => {
+            e.preventDefault();
             e.target.blur();
-            this.start();
-        });
+            const isMuted = audioManager.masterMute.gain.value === 0;
+            if (isMuted) {
+                audioManager.masterMute.gain.value = 1.0;
+                muteIcon.textContent = '🔊';
+            } else {
+                audioManager.masterMute.gain.value = 0;
+                muteIcon.textContent = '🔇';
+            }
+        };
+
+        // Click & Touch Support for all UI
+        startBtn.addEventListener('click', onStart);
+        startBtn.addEventListener('touchstart', onStart, { passive: false });
+        
+        restartBtn.addEventListener('click', onStart);
+        restartBtn.addEventListener('touchstart', onStart, { passive: false });
+
+        muteBtn.addEventListener('click', onMute);
+        muteBtn.addEventListener('touchstart', onMute, { passive: false });
 
         // Initial high score display
         if (this.bestVal) this.bestVal.textContent = Math.floor(this.highScore);
@@ -281,6 +306,18 @@ class Engine {
 
     draw() {
         renderer.clear();
+        
+        // --- KINETIC FOV STRETCH ---
+        // Dynamically stretch coordinates horizontally based on speed
+        const stretchFactor = 1 + Math.max(0, (this.gameSpeed - 400) * 0.0001);
+        const { ctx, width, height } = renderer;
+        
+        ctx.save();
+        // Scale around the center of the screen
+        ctx.translate(width / 2, height / 2);
+        ctx.scale(stretchFactor, 1);
+        ctx.translate(-width / 2, -height / 2);
+
         this.camera.apply();
         this.backgroundLayers.forEach(layer => layer.draw());
         this.drawGrid();
@@ -288,13 +325,15 @@ class Engine {
         if (this.state === 'PLAYING' || this.state === 'GAMEOVER') {
             this.player.draw(this.ctx);
             this.obstacles.forEach(obs => obs.draw(this.ctx));
-            this.particles.draw();
+            this.particles.draw(this.gameSpeed);
         }
 
         if (this.gameSpeed > 700) {
             this.drawSpeedStreaks();
         }
+        
         this.camera.restore();
+        ctx.restore(); // Restore FOV Stretch
     }
 
     drawSpeedStreaks() {

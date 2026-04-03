@@ -72,20 +72,49 @@ canvas {
     top: 20px;
     right: 20px;
     background: var(--glass-bg);
-    padding: 10px 20px;
-    border-radius: 8px;
+    padding: 10px 15px;
+    border-radius: 12px;
     border: 1px solid var(--glass-border);
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(10px);
     display: flex;
-    gap: 10px;
-    font-family: 'Orbitron', sans-serif;
-    letter-spacing: 2px;
-    opacity: 1;
-    transition: opacity 0.3s ease;
+    align-items: center;
+    gap: 20px;
+    font-family: 'Rajdhani', sans-serif;
+    letter-spacing: 1px;
+    z-index: 20;
+    transition: opacity 0.3s ease, border-color 0.5s ease;
 }
 
 #hud.hidden {
     opacity: 0;
+    pointer-events: none;
+}
+
+.score-data {
+    display: flex;
+    gap: 15px;
+}
+
+.icon-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--glass-border);
+    color: #fff;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem;
+    transition: all 0.2s ease;
+}
+
+.icon-btn:hover {
+    background: var(--current-theme);
+    border-color: var(--current-theme);
+    box-shadow: 0 0 15px var(--current-theme);
+    transform: scale(1.1);
 }
 
 .neon-text {
@@ -144,18 +173,22 @@ canvas {
 
 .score-container {
     display: flex;
-    gap: 8px;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-end;
 }
 
 .score-container .label {
     color: var(--neon-pink);
-    font-size: 0.8rem;
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    font-family: 'Orbitron', sans-serif;
 }
 
-#score-val {
-    font-size: 1.5rem;
+#score-val, #best-val {
+    font-size: 1.4rem;
+    font-weight: 700;
     color: var(--current-theme);
     text-shadow: 0 0 8px var(--current-theme);
     transition: color 0.5s ease;
+    font-family: 'Orbitron', sans-serif;
 }

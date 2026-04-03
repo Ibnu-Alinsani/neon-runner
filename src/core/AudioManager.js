@@ -28,8 +28,8 @@ class AudioManager {
         // Start pre-fetching immediately
         this.bgmPromise = this.preFetchBGM();
 
-        window.addEventListener('click', () => this.init(), { once: true });
-        window.addEventListener('keydown', () => this.init(), { once: true });
+        // Register listeners IMMEDIATELY (Always ready to catch signals)
+        this.setupEventListeners();
     }
 
     async preFetchBGM() {
@@ -44,46 +44,52 @@ class AudioManager {
     }
 
     async init() {
-        if (this.isInitialized) return;
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        this.ctx = new AudioContext();
+        // If we are already initializing, return the existing promise
+        if (this.initPromise) return this.initPromise;
         
-        // Ensure context starts
-        if (this.ctx.state === 'suspended') {
-            await this.ctx.resume();
-            console.log('[Audio] Context Resumed (Init)');
-        }
-
-        // 1. FINAL BARRIER
-        this.masterMute = this.ctx.createGain();
-        this.masterMute.gain.value = 1.0;
-        this.masterMute.connect(this.ctx.destination);
-
-        // 2. MIXING CHAIN
-        this.compressor = this.ctx.createDynamicsCompressor();
-        this.compressor.threshold.setValueAtTime(-18, this.ctx.currentTime);
-        this.compressor.connect(this.masterMute);
-
-        this.masterGain = this.ctx.createGain();
-        this.masterGain.gain.value = CONSTANTS.AUDIO.VOLUME;
-        this.masterGain.connect(this.compressor);
-        
-        this.sidechainGain = this.ctx.createGain();
-        this.sidechainGain.connect(this.masterGain);
-        
-        this.isInitialized = true;
-        this.setupEventListeners();
-
-        // Start decoding
-        const arrayBuffer = await this.bgmPromise;
-        if (arrayBuffer) {
-            try {
-                this.bgmBuffer = await this.ctx.decodeAudioData(arrayBuffer);
-                console.log('[Audio] BGM Decoded & Ready');
-            } catch (err) {
-                console.error('[Audio] Decoding failed:', err);
+        this.initPromise = (async () => {
+            if (this.isInitialized) return;
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioContext();
+            
+            // Ensure context starts
+            if (this.ctx.state === 'suspended') {
+                await this.ctx.resume();
+                console.log('[Audio] Context Resumed (Init)');
             }
-        }
+
+            // 1. FINAL BARRIER
+            this.masterMute = this.ctx.createGain();
+            this.masterMute.gain.value = 1.0;
+            this.masterMute.connect(this.ctx.destination);
+
+            // 2. MIXING CHAIN
+            this.compressor = this.ctx.createDynamicsCompressor();
+            this.compressor.threshold.setValueAtTime(-18, this.ctx.currentTime);
+            this.compressor.connect(this.masterMute);
+
+            this.masterGain = this.ctx.createGain();
+            this.masterGain.gain.value = CONSTANTS.AUDIO.VOLUME;
+            this.masterGain.connect(this.compressor);
+            
+            this.sidechainGain = this.ctx.createGain();
+            this.sidechainGain.connect(this.masterGain);
+            
+            this.isInitialized = true;
+
+            // Decode the pre-fetched buffer
+            const arrayBuffer = await this.bgmPromise;
+            if (arrayBuffer) {
+                try {
+                    this.bgmBuffer = await this.ctx.decodeAudioData(arrayBuffer);
+                    console.log('[Audio] BGM Decoded & Ready');
+                } catch (err) {
+                    console.error('[Audio] Decoding failed:', err);
+                }
+            }
+        })();
+
+        return this.initPromise;
     }
 
     setSpeed(factor, arrangementFactor = 0) {
@@ -95,22 +101,13 @@ class AudioManager {
     }
 
     setupEventListeners() {
-        eventBus.on('PLAYER_JUMP', () => this.playOneShot(440, 'sawtooth', 0.1, 0.15));
-        eventBus.on('PLAYER_LAND', () => this.playOneShot(100, 'sine', 0.15, 0.3));
-        eventBus.on('NEAR_MISS', () => this.playWessSound());
+        eventBus.on('PLAYER_JUMP', () => { if(this.isInitialized) this.playOneShot(440, 'sawtooth', 0.1, 0.15); });
+        eventBus.on('PLAYER_LAND', () => { if(this.isInitialized) this.playOneShot(100, 'sine', 0.15, 0.3); });
+        eventBus.on('NEAR_MISS', () => { if(this.isInitialized) this.playWessSound(); });
         eventBus.on('COLLISION', () => this.stopAllSounds());
         eventBus.on('GAME_START', async () => {
-            // Force init if not already (safeguard)
-            if (!this.isInitialized) await this.init();
-            
-            // Wait for buffer if it's still being decoded
-            if (!this.bgmBuffer) {
-                console.log('[Audio] Waiting for BGM buffer...');
-                const arrayBuffer = await this.bgmPromise;
-                if (arrayBuffer) {
-                    this.bgmBuffer = await this.ctx.decodeAudioData(arrayBuffer);
-                }
-            }
+            // This now triggers the initialization on the first user click
+            await this.init();
             
             if (this.bgmBuffer) {
                 this.playBGM();

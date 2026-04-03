@@ -85,27 +85,45 @@ export class ParticleSystem {
     }
 
     /**
-     * Render all active particles with global composition for glow
+     * Render all active particles with Kinetic Elasticity (Streaks)
+     * @param {number} gameSpeed - Current game velocity for stretching
      */
-    draw() {
-        this.ctx.save();
+    draw(gameSpeed = 0) {
+        const { ctx } = this;
+        ctx.save();
         
         // Additive blending for that intense neon glow effect
-        this.ctx.globalCompositeOperation = 'lighter';
+        ctx.globalCompositeOperation = 'lighter';
         
+        const stretchMult = Math.min(1.5, Math.max(1, (gameSpeed / 400))); // Dynamic stretch factor
+
         for (let i = 0; i < this.maxParticles; i++) {
             const p = this.pool[i];
             if (p.active) {
-                const alpha = p.life / p.maxLife;
-                this.ctx.fillStyle = p.color;
-                this.ctx.globalAlpha = alpha;
+                const alpha = Math.max(0, p.life / p.maxLife);
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = p.color;
                 
-                this.ctx.beginPath();
-                this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                this.ctx.fill();
+                // --- KINETIC STRETCH (Elasticity) ---
+                // If moving fast, draw as a streak/line
+                const streakLength = Math.abs(p.vx * 0.05) * stretchMult;
+                
+                if (streakLength > 5) {
+                    ctx.beginPath();
+                    ctx.lineWidth = p.size * 1.5;
+                    ctx.strokeStyle = p.color;
+                    ctx.lineCap = 'round';
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(p.x - (p.vx * 0.02 * stretchMult), p.y);
+                    ctx.stroke();
+                } else {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
             }
         }
 
-        this.ctx.restore();
+        ctx.restore();
     }
 }
